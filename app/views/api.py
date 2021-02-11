@@ -37,7 +37,7 @@ def _send():
 
     client = Client.query.filter_by(
         idx=client_id,
-        secret=secret
+        secret=sha384(secret.encode()).hexdigest()
     ).first()
 
     if client is None or client.activate is False:

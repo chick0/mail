@@ -53,7 +53,7 @@ class Client(db.Model):
     )
 
     secret = db.Column(      # 비밀 키
-        db.String(40),
+        db.String(96),
         nullable=False
     )
 

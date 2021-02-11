@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from os import urandom
 from secrets import token_bytes
+from hashlib import sha384
 
 from flask import Blueprint
 from flask import abort
@@ -28,12 +29,11 @@ def add_client():
         abort(400)
 
     worker = aes256.AESCipher()
-    client = Client(
+    db.session.add(Client(
         idx=idx,
         email=worker.encrypt(plaintext=email),
-        secret=secret
-    )
-    db.session.add(client)
+        secret=sha384(secret.encode()).hexdigest()
+    ))
     db.session.commit()
 
     mail.send(
