@@ -16,3 +16,6 @@
    - form 방식으로 검증할 이메일과 클라이언트의 아이디를 전송함
    - `Authorization` 헤더에 클라이언트 시크릿을 보낸다
       - `type` 은 `Bearer`
+
+# 추가
+- 해당 API 서버 사용시 이 [파일](https://gist.github.com/chick0/22c6440322981b5d874a64a03c70b67f) 참고
