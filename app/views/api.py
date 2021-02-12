@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 from flask import Blueprint
 from flask import abort
 from flask import request
+from sqlalchemy.exc import IntegrityError
 
 from app import db
 from models import Auth, Client
@@ -18,6 +19,19 @@ bp = Blueprint(
     import_name=__name__,
     url_prefix=f"/{__name__.split('.')[-1]}"
 )
+
+
+def add_to_database(idx: str, client_id: str, email: str, token: int):
+    try:
+        db.session.add(Auth(
+            idx=idx,
+            client_id=client_id,
+            email=email,
+            token=token
+        ))
+        db.session.commit()
+    except IntegrityError:
+        add_to_database(idx, client_id, email, token)
 
 
 @bp.route("/send", methods=['POST'])
@@ -43,14 +57,12 @@ def _send():
     if client is None or client.activate is False:
         abort(401)
 
-    auth = Auth(
+    add_to_database(
         idx=idx,
         client_id=client_id,
         email=sha384(email.encode()).hexdigest(),
         token=int("".join(token))
     )
-    db.session.add(auth)
-    db.session.commit()
 
     mail.send(
         to_address=email,

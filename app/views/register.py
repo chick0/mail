@@ -6,6 +6,7 @@ from hashlib import sha384
 from flask import Blueprint
 from flask import abort
 from flask import request
+from sqlalchemy.exc import IntegrityError
 
 from app import db
 from models import Client
@@ -19,9 +20,24 @@ bp = Blueprint(
 )
 
 
+def add_to_database(email: str, secret: str):
+    idx = urandom(18).hex()
+
+    try:
+        db.session.add(Client(
+            idx=idx,
+            email=email,
+            secret=sha384(secret.encode()).hexdigest()
+        ))
+        db.session.commit()
+
+        return idx
+    except IntegrityError:
+        return add_to_database(email, secret)
+
+
 @bp.route("", methods=['POST'])
 def add_client():
-    idx = urandom(18).hex()
     secret = token_bytes(20).hex()
 
     email = request.form.get("email")
@@ -29,12 +45,10 @@ def add_client():
         abort(400)
 
     worker = aes256.AESCipher()
-    db.session.add(Client(
-        idx=idx,
+    idx = add_to_database(
         email=worker.encrypt(plaintext=email),
         secret=sha384(secret.encode()).hexdigest()
-    ))
-    db.session.commit()
+    )
 
     mail.send(
         to_address=email,
